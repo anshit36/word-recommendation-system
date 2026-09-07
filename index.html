@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Recommendation System</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #FFD1DC, #FFEBCD, #E6E6FA);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* Sticky Header Container */
+        .sticky-container {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: linear-gradient(to right bottom, #FFFFFF, #F0F8FF);
+            padding: 20px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sticky-container h1 {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Merriweather', serif;
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            margin: 0;
+        }
+
+        .sticky-container input {
+            width: 80%;
+            padding: 15px;
+            margin-top: 10px;
+            border: 2px solid transparent;
+            border-radius: 15px;
+            font-size: 18px;
+            color: #333;
+            background: linear-gradient(to right, #F3F4F6, #E5E7EB);
+            transition: all 0.3s ease;
+            border-image: linear-gradient(to right, #FF6B6B, #4ECDC4) 1;
+            border-image-slice: 1;
+        }
+
+        .sticky-container input:focus {
+            outline: none;
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+        }
+
+        /* Suggestions Styling */
+        .suggestions {
+            margin-top: 30px;
+            padding: 20px;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        /* Suggestion Item Styling */
+        .suggestion-item {
+            padding: 15px;
+            background: linear-gradient(to right, #E6F2FF, #CCE5FF);
+            border: 2px solid transparent;
+            border-image: linear-gradient(to right, #FF6B6B, #4ECDC4) 1;
+            border-image-slice: 1;
+            border-radius: 15px;
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .suggestion-item:hover {
+            transform: translateX(10px) scale(1.05);
+            box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .suggestion-item span {
+            color: #FF6B6B;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .suggestion-item span:hover {
+            color: #4ECDC4;
+        }
+
+        /* Empty Suggestions Message */
+        .no-suggestions {
+            font-size: 18px;
+            color: #888;
+            font-style: italic;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .sticky-container input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Sticky Input Container -->
+<div class="sticky-container">
+    <h1>Word Recommendation System</h1>
+    <label for="sentence">Start typing:</label>
+    <input type="text" id="sentence" placeholder="Type a sentence...">
+</div>
+
+<!-- Suggestions Section -->
+<div class="suggestions" id="suggestionsContainer">
+    <p class="no-suggestions">Start typing to see suggestions...</p>
+</div>
+
+<script>
+    document.getElementById('sentence').addEventListener('input', function () {
+        const sentence = this.value;
+
+        if (sentence.trim() === "") {
+            const suggestionsContainer = document.getElementById('suggestionsContainer');
+            suggestionsContainer.innerHTML = '<p class="no-suggestions">Start typing to see suggestions...</p>';
+            return;
+        }
+
+        fetch(`/recommendation/autocomplete?sentence=${encodeURIComponent(sentence)}`)
+            .then(response => response.json())
+            .then(data => {
+                const suggestionsContainer = document.getElementById('suggestionsContainer');
+                suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+
+                if (Object.keys(data).length === 0) {
+                    suggestionsContainer.innerHTML = '<p class="no-suggestions">No suggestions available.</p>';
+                } else {
+                    Object.entries(data).forEach(([word, probability]) => {
+                        const suggestionItem = document.createElement('div');
+                        suggestionItem.classList.add('suggestion-item');
+                        suggestionItem.innerHTML = `${word} <span>(Probability: ${probability.toFixed(2)})</span>`;
+                        suggestionsContainer.appendChild(suggestionItem);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching suggestions:', error);
+                const suggestionsContainer = document.getElementById('suggestionsContainer');
+                suggestionsContainer.innerHTML = '<p class="no-suggestions">Error fetching suggestions.</p>';
+            });
+    });
+</script>
+</body>
+</html>
